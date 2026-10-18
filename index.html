@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mercati</title>
+<meta name="description" content="Il report giornaliero sui mercati, gli aggiornamenti orari e le idee aperte.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mercati">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF2EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1512" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icone/icona-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&display=swap">
+<style>
+  /* Carta da libro mastro: righe verdi, inchiostro scuro, il rosso solo per ciò che scende. */
+  :root {
+    --carta: #EEF2EC;
+    --foglio: #FBFCFA;
+    --inchiostro: #1C2620;
+    --grafite: #56625A;
+    --riga: #CBD6CC;
+    --verde: #1F6B45;
+    --verde-tenue: #DCEADF;
+    --rosso: #B3261E;
+    --rosso-tenue: #F6DEDB;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --sans: "Archivo", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --barra: 52px;
+    --schede: 58px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --carta: #0F1512;
+      --foglio: #151D18;
+      --inchiostro: #E3EAE4;
+      --grafite: #9AA89F;
+      --riga: #2A3630;
+      --verde: #63C08D;
+      --verde-tenue: #1D3326;
+      --rosso: #F08A80;
+      --rosso-tenue: #3A1F1C;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--carta);
+    color: var(--inchiostro);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  button, input { font: inherit; color: inherit; }
+  a { color: var(--verde); }
+  :focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; border-radius: 4px; }
+  .nascosto { display: none !important; }
+  .solo-lettori { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------------- barra in alto */
+  .barra {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 8px;
+    height: calc(var(--barra) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 12px 0 16px;
+    background: var(--carta);
+    border-bottom: 1px solid var(--riga);
+  }
+  .marchio {
+    font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 24px;
+    font-variation-settings: "opsz" 48; letter-spacing: -0.01em; margin: 0; flex: 1;
+  }
+  .sincronia { font-size: 13px; color: var(--grafite); font-variant-numeric: tabular-nums; }
+  .tasto-icona {
+    width: 40px; height: 40px; display: grid; place-items: center;
+    border: 0; background: transparent; border-radius: 10px; cursor: pointer; color: var(--inchiostro);
+  }
+  .tasto-icona:active { background: var(--verde-tenue); }
+  .tasto-icona svg { width: 22px; height: 22px; }
+  .gira svg { animation: gira 0.9s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+
+  /* ---------------- nastro dei mercati */
+  .nastro {
+    display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
+    background: var(--foglio); border-bottom: 1px solid var(--riga);
+    font-variant-numeric: tabular-nums;
+  }
+  .nastro::-webkit-scrollbar { display: none; }
+  .mercato {
+    flex: 0 0 auto; padding: 8px 14px 9px; border-right: 1px solid var(--riga);
+    display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: baseline;
+  }
+  .mercato .nome { grid-column: 1 / 3; font-size: 12px; color: var(--grafite); white-space: nowrap; }
+  .mercato .valore { font-size: 15px; font-weight: 600; font-variation-settings: "wdth" 88; white-space: nowrap; }
+  .mercato .var { font-size: 13px; font-variation-settings: "wdth" 88; white-space: nowrap; }
+  .vivo::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 5px; border-radius: 50%; background: var(--verde); vertical-align: 2px; }
+  .su { color: var(--verde); }
+  .giu { color: var(--rosso); }
+  .pari { color: var(--grafite); }
+
+  /* ---------------- contenuto */
+  main { padding-bottom: calc(var(--schede) + env(safe-area-inset-bottom) + 24px); }
+  .vista { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+  .testata { padding: 22px 0 6px; }
+  .data {
+    font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.05; margin: 0;
+    font-variation-settings: "opsz" 72; letter-spacing: -0.015em;
+  }
+  .firma { margin: 8px 0 0; color: var(--grafite); font-size: 14px; }
+  .firma .automatico { color: var(--rosso); }
+
+  .indice {
+    position: sticky; top: calc(var(--barra) + env(safe-area-inset-top)); z-index: 10;
+    display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    margin: 14px -16px 0; padding: 8px 16px;
+    background: var(--carta); border-bottom: 1px solid var(--riga);
+  }
+  .indice::-webkit-scrollbar { display: none; }
+  .indice button {
+    flex: 0 0 auto; border: 1px solid var(--riga); background: var(--foglio); border-radius: 999px;
+    padding: 5px 12px; font-size: 14px; cursor: pointer; white-space: nowrap;
+  }
+  .indice button:active { background: var(--verde-tenue); border-color: var(--verde); }
+
+  /* ---------------- il report */
+  .report { font-family: var(--serif); font-size: 18px; line-height: 1.58; font-variation-settings: "opsz" 16; padding-top: 16px; }
+  .orario .report { padding-top: 0; }
+  .report p, .report li { max-width: 36em; }
+  .report p { margin: 0 0 14px; }
+  .report h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 23px; line-height: 1.2; font-variation-settings: "opsz" 36;
+    margin: 34px 0 12px; padding-top: 14px; border-top: 2px solid var(--verde);
+    scroll-margin-top: calc(var(--barra) + env(safe-area-inset-top) + 58px);
+  }
+  .report h2#s-sintesi { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .report h2#s-sintesi + p {
+    font-size: 22px; line-height: 1.45; font-variation-settings: "opsz" 28; margin: 18px 0 8px;
+  }
+  .report h3 {
+    font-family: var(--sans); font-weight: 650; font-size: 17px; line-height: 1.3;
+    margin: 26px 0 8px; padding-left: 10px; border-left: 3px solid var(--verde);
+  }
+  .report ul, .report ol { padding-left: 1.1em; margin: 0 0 14px; }
+  .report li { margin: 0 0 8px; }
+  .report li::marker { color: var(--verde); }
+  .report strong { font-weight: 650; }
+  .report em { font-style: italic; }
+  .report code { font-family: var(--sans); font-size: 0.9em; }
+
+  .tabella { overflow-x: auto; margin: 6px -16px 18px; padding: 0 16px; -webkit-overflow-scrolling: touch; }
+  .tabella table {
+    border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 14px; line-height: 1.3;
+    font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 86; background: var(--foglio);
+  }
+  .tabella th, .tabella td { padding: 7px 5px; border-bottom: 1px solid var(--riga); text-align: left; vertical-align: top; }
+  .tabella th:first-child, .tabella td:first-child { padding-left: 8px; }
+  .tabella th:last-child, .tabella td:last-child { padding-right: 8px; }
+  .tabella thead th { font-weight: 600; color: var(--grafite); font-size: 13px; border-bottom: 2px solid var(--verde); white-space: nowrap; }
+  .tabella td.num { text-align: right; white-space: nowrap; }
+  .tabella thead th:not(:first-child) { text-align: right; }
+  .tabella tr.gruppo th { font-weight: 650; font-size: 13px; color: var(--verde); padding-top: 14px; background: var(--carta); }
+  .tabella td:first-child { min-width: 5.5em; }
+
+  /* ---------------- aggiornamenti orari */
+  .titolo-vista { font-family: var(--serif); font-weight: 500; font-size: 30px; margin: 22px 0 4px; font-variation-settings: "opsz" 60; }
+  .nota { color: var(--grafite); font-size: 14px; margin: 0 0 16px; }
+  .orario { border-top: 1px solid var(--riga); padding: 14px 0 4px; }
+  .orario .ora { font-weight: 650; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--verde); margin: 0 0 6px; }
+  .orario .report { font-size: 16.5px; }
+  .orario .report p:last-child { color: var(--grafite); font-size: 14px; }
+
+  /* ---------------- idee */
+  .idea { background: var(--foglio); border: 1px solid var(--riga); border-left: 4px solid var(--verde); border-radius: 4px; padding: 14px 14px 12px; margin: 0 0 14px; }
+  .idea.allarme { border-left-color: var(--rosso); }
+  .idea header { display: flex; align-items: baseline; gap: 12px; }
+  .idea h3 { margin: 0; font-size: 18px; font-weight: 650; flex: 1; }
+  .idea .perf { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 88; }
+  .idea .sigla { margin: 2px 0 10px; color: var(--grafite); font-size: 14px; }
+  .idea dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 0; }
+  .idea dt { font-size: 12.5px; color: var(--grafite); }
+  .idea dd { margin: 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .idea .avvisi { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 0; }
+  .idea .avvisi span { background: var(--rosso-tenue); color: var(--rosso); font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+  .idea .motivo { font-family: var(--serif); font-style: italic; font-size: 16px; margin: 10px 0 0; color: var(--grafite); }
+  .chiuse { list-style: none; margin: 0; padding: 0; }
+  .chiuse li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--riga); }
+  .chiuse .nome { font-weight: 600; }
+  .chiuse .dettaglio { grid-column: 1 / 3; color: var(--grafite); font-size: 14px; }
+  .sottotitolo { font-family: var(--serif); font-weight: 600; font-size: 21px; margin: 28px 0 10px; }
+
+  /* ---------------- archivio */
+  .mese { font-family: var(--serif); font-weight: 600; font-size: 20px; margin: 24px 0 4px; }
+  .giorni { list-style: none; margin: 0; padding: 0; }
+  .giorni a {
+    display: grid; grid-template-columns: 3.4em 1fr; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--riga); color: inherit; text-decoration: none;
+  }
+  .giorni .giorno { font-variant-numeric: tabular-nums; }
+  .giorni .giorno b { display: block; font-size: 22px; line-height: 1; font-weight: 600; }
+  .giorni .giorno span { font-size: 13px; color: var(--grafite); }
+  .giorni .testo { font-family: var(--serif); font-size: 16.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .giorni .automatico { display: block; font-family: var(--sans); font-size: 12.5px; color: var(--rosso); margin-top: 3px; }
+  .indietro { display: inline-flex; align-items: center; gap: 4px; margin: 16px 0 0; padding: 6px 0; border: 0; background: none; color: var(--verde); font-size: 16px; cursor: pointer; }
+
+  /* ---------------- impostazioni e benvenuto */
+  .gruppo-impostazioni { background: var(--foglio); border: 1px solid var(--riga); border-radius: 6px; padding: 16px; margin: 0 0 16px; }
+  .gruppo-impostazioni h2 { font-family: var(--serif); font-weight: 600; font-size: 20px; margin: 0 0 6px; }
+  .gruppo-impostazioni p { margin: 0 0 12px; }
+  .stato-riga { display: flex; gap: 8px; align-items: baseline; font-size: 15px; margin: 0 0 12px; }
+  .stato-riga::before { content: ""; flex: 0 0 9px; height: 9px; border-radius: 50%; background: var(--grafite); transform: translateY(-1px); }
+  .stato-riga.ok::before { background: var(--verde); }
+  .stato-riga.ko::before { background: var(--rosso); }
+  label { display: block; font-size: 14px; color: var(--grafite); margin: 0 0 6px; }
+  input[type="password"], input[type="text"] {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--riga); border-radius: 6px; background: var(--carta);
+    font-size: 16px; font-family: var(--sans);
+  }
+  .azioni { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .tasto {
+    border: 0; border-radius: 8px; padding: 11px 16px; font-weight: 600; font-size: 15.5px; cursor: pointer;
+    background: var(--verde); color: var(--foglio);
+  }
+  .tasto.secondario { background: transparent; color: var(--verde); border: 1px solid var(--verde); }
+  .tasto.pericolo { background: transparent; color: var(--rosso); border: 1px solid var(--rosso); }
+  .tasto:disabled { opacity: 0.5; cursor: default; }
+  .passi { margin: 0 0 14px; padding-left: 1.3em; }
+  .passi li { margin: 0 0 10px; }
+  .dettagli-tecnici { font-size: 14px; color: var(--grafite); }
+  dl.dettagli-tecnici { display: grid; grid-template-columns: minmax(8em, auto) 1fr; gap: 6px 14px; margin: 0; }
+  dl.dettagli-tecnici dd { margin: 0; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
+  .benvenuto .lede { font-family: var(--serif); font-size: 21px; line-height: 1.45; margin: 8px 0 18px; }
+
+  .vuoto { font-family: var(--serif); font-size: 18px; color: var(--grafite); padding: 28px 0; }
+
+  /* ---------------- schede in basso */
+  .schede {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    height: calc(var(--schede) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
+    background: var(--carta); border-top: 1px solid var(--riga);
+  }
+  .schede a {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--grafite); text-decoration: none; font-size: 12px; font-weight: 500;
+  }
+  .schede a svg { width: 24px; height: 24px; }
+  .schede a[aria-current="page"] { color: var(--verde); font-weight: 650; }
+  .contatore {
+    position: absolute; top: 5px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; background: var(--rosso); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+  }
+
+  .avviso-barra {
+    position: fixed; left: 12px; right: 12px; z-index: 30;
+    bottom: calc(var(--schede) + env(safe-area-inset-bottom) + 10px);
+    max-width: 560px; margin: 0 auto; padding: 12px 14px; border-radius: 8px;
+    background: var(--inchiostro); color: var(--carta); font-size: 15px; line-height: 1.35;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .avviso-barra { animation: entra 0.18s ease-out; }
+    @keyframes entra { from { transform: translateY(8px); opacity: 0; } }
+  }
+  @media (min-width: 760px) {
+    .report { font-size: 19px; }
+    .tabella { margin-left: 0; margin-right: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="barra">
+  <h1 class="marchio">Mercati</h1>
+  <span class="sincronia" id="sincronia" aria-live="polite"></span>
+  <button class="tasto-icona" id="aggiorna" type="button" aria-label="Aggiorna i dati">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+  </button>
+  <a class="tasto-icona" href="#impostazioni" id="vai-impostazioni" aria-label="Impostazioni">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.86a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg>
+  </a>
+</header>
+
+<nav class="nastro" id="nastro" aria-label="Mercati di riferimento"></nav>
+
+<main>
+  <!-- Oggi -->
+  <section class="vista" id="v-oggi" aria-labelledby="data-oggi">
+    <div class="testata">
+      <h2 class="data" id="data-oggi"></h2>
+      <p class="firma" id="firma-oggi"></p>
+    </div>
+    <nav class="indice" id="indice-oggi" aria-label="Sezioni del report"></nav>
+    <article class="report" id="report-oggi"></article>
+  </section>
+
+  <!-- Orari -->
+  <section class="vista nascosto" id="v-orari" aria-labelledby="titolo-orari">
+    <h2 class="titolo-vista" id="titolo-orari">Aggiornamenti di oggi</h2>
+    <p class="nota" id="nota-orari"></p>
+    <div id="elenco-orari"></div>
+  </section>
+
+  <!-- Idee -->
+  <section class="vista nascosto" id="v-idee" aria-labelledby="titolo-idee">
+    <h2 class="titolo-vista" id="titolo-idee">Idee aperte</h2>
+    <p class="nota" id="nota-idee"></p>
+    <div id="elenco-idee"></div>
+    <h3 class="sottotitolo nascosto" id="titolo-chiuse">Chiuse di recente</h3>
+    <ul class="chiuse" id="elenco-chiuse"></ul>
+  </section>
+
+  <!-- Archivio -->
+  <section class="vista nascosto" id="v-archivio" aria-labelledby="titolo-archivio">
+    <h2 class="titolo-vista" id="titolo-archivio">Archivio</h2>
+    <div id="elenco-archivio"></div>
+  </section>
+
+  <!-- Un giornaliero dell'archivio -->
+  <section class="vista nascosto" id="v-passato" aria-labelledby="data-passato">
+    <button class="indietro" type="button" id="torna-archivio">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Archivio
+    </button>
+    <div class="testata">
+      <h2 class="data" id="data-passato"></h2>
+      <p class="firma" id="firma-passato"></p>
+    </div>
+    <nav class="indice" id="indice-passato" aria-label="Sezioni del report"></nav>
+    <article class="report" id="report-passato"></article>
+  </section>
+
+  <!-- Impostazioni -->
+  <section class="vista nascosto" id="v-impostazioni" aria-labelledby="titolo-impostazioni">
+    <h2 class="titolo-vista" id="titolo-impostazioni">Impostazioni</h2>
+    <p class="nota">L'app legge i report dal tuo repository privato su GitHub con un token che resta solo su questo dispositivo.</p>
+
+    <div class="gruppo-impostazioni" id="blocco-token">
+      <h2>Collegamento a GitHub</h2>
+      <p class="stato-riga" id="stato-token">Non collegata</p>
+      <label for="campo-token">Token di accesso</label>
+      <input type="password" id="campo-token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+      <div class="azioni">
+        <button class="tasto" type="button" id="salva-token">Collega</button>
+        <button class="tasto pericolo nascosto" type="button" id="scollega">Scollega</button>
+      </div>
+      <details class="dettagli-tecnici" style="margin-top:14px">
+        <summary>Come si crea il token</summary>
+        <ol class="passi" id="passi-token"></ol>
+      </details>
+    </div>
+
+    <div class="gruppo-impostazioni">
+      <h2>Notifiche</h2>
+      <p class="stato-riga" id="stato-notifiche">Spente</p>
+      <p class="nota nascosto" id="nota-installa">Per ricevere le notifiche sull'iPhone apri questa pagina in Safari, tocca Condividi e poi «Aggiungi alla schermata Home». Poi apri Mercati dall'icona e torna qui.</p>
+      <div class="azioni">
+        <button class="tasto" type="button" id="attiva-notifiche">Attiva le notifiche</button>
+        <button class="tasto secondario nascosto" type="button" id="prova-notifica">Invia una notifica di prova</button>
+        <button class="tasto pericolo nascosto" type="button" id="disattiva-notifiche">Disattiva</button>
+      </div>
+    </div>
+
+    <div class="gruppo-impostazioni">
+      <h2>Dati</h2>
+      <dl class="dettagli-tecnici" id="dettagli-dati"></dl>
+      <div class="azioni">
+        <button class="tasto secondario" type="button" id="chiedi-aggiornamento">Chiedi un aggiornamento adesso</button>
+      </div>
+    </div>
+
+    <p class="nota">Mercati 1.0. Analisi informativa generata automaticamente, non costituisce raccomandazione personalizzata.</p>
+  </section>
+
+  <!-- Benvenuto: senza token -->
+  <section class="vista nascosto benvenuto" id="v-benvenuto" aria-labelledby="titolo-benvenuto">
+    <h2 class="titolo-vista" id="titolo-benvenuto">Benvenuto</h2>
+    <p class="lede">Qui trovi il report giornaliero prima dell'apertura, gli aggiornamenti durante le sedute e le idee aperte, anche offline.</p>
+    <div class="gruppo-impostazioni">
+      <h2>Collega il tuo repository</h2>
+      <ol class="passi" id="passi-benvenuto"></ol>
+      <label for="campo-token-benvenuto">Token di accesso</label>
+      <input type="password" id="campo-token-benvenuto" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+      <div class="azioni"><button class="tasto" type="button" id="salva-token-benvenuto">Collega</button></div>
+      <p class="stato-riga nascosto" id="stato-benvenuto"></p>
+    </div>
+  </section>
+</main>
+
+<nav class="schede" aria-label="Sezioni">
+  <a href="#oggi" data-vista="oggi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Oggi
+  </a>
+  <a href="#orari" data-vista="orari">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Orari<span class="contatore nascosto" id="contatore-orari"></span>
+  </a>
+  <a href="#idee" data-vista="idee">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg>Idee
+  </a>
+  <a href="#archivio" data-vista="archivio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>Archivio
+  </a>
+</nav>
+
+<div class="avviso-barra nascosto" id="avviso" role="status"></div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ configurazione */
+const CONFIG = {
+  proprietario: "stefanoocchipinti94-ops",
+  repository: "report-mercati",
+  ramo: "main",
+};
+const API = `https://api.github.com/repos/${CONFIG.proprietario}/${CONFIG.repository}`;
+const CHIAVI = { token: "mercati.token", feed: "mercati.feed", vapid: "mercati.vapid", dispositivo: "mercati.dispositivo",
+                 archivio: "mercati.archivio.", visto: "mercati.orari.visti" };
+const URL_TOKEN = "https://github.com/settings/personal-access-tokens/new?name=App%20Mercati" +
+  "&description=Lettura%20dei%20report%20e%20notifiche%20dell%27app%20Mercati&target_name=" + CONFIG.proprietario +
+  "&expires_in=366&contents=write";
+
+/* ------------------------------------------------------------------ memoria locale (sempre protetta) */
+const memoria = {
+  leggi(chiave) { try { return localStorage.getItem(chiave); } catch (e) { return null; } },
+  scrivi(chiave, valore) { try { localStorage.setItem(chiave, valore); return true; } catch (e) { return false; } },
+  togli(chiave) { try { localStorage.removeItem(chiave); } catch (e) { /* niente */ } },
+  json(chiave) { try { return JSON.parse(this.leggi(chiave) || "null"); } catch (e) { return null; } },
+};
+
+const stato = {
+  token: memoria.leggi(CHIAVI.token),
+  feed: memoria.json(CHIAVI.feed),
+  ultimaLettura: 0,
+  inCorso: false,
+  offline: false,
+};
+
+const $ = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------------ formato italiano */
+const formati = {};
+function formato(min, max) {
+  const chiave = `${min}-${max}`;
+  if (!formati[chiave]) formati[chiave] = new Intl.NumberFormat("it-IT", { minimumFractionDigits: min, maximumFractionDigits: max });
+  return formati[chiave];
+}
+function numero(v, decimali) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "n.d.";
+  return formato(decimali, decimali).format(Number(v));
+}
+function decimaliPer(v) {
+  const a = Math.abs(Number(v));
+  return a >= 10000 ? 0 : a >= 10 ? 2 : 4;
+}
+function variazione(v, decimali = 2, unita = "%") {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "n.d.";
+  const n = Number(v);
+  const segno = n > 0 ? "+" : n < 0 ? "−" : "";
+  return segno + formato(decimali, decimali).format(Math.abs(n)) + unita;
+}
+function classe(v) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "pari";
+  return Number(v) > 0 ? "su" : Number(v) < 0 ? "giu" : "pari";
+}
+function freccia(v) {
+  return classe(v) === "su" ? "▲ " : classe(v) === "giu" ? "▼ " : "";
+}
+function prezzo(v, valuta) {
+  if (v === null || v === undefined) return "n.d.";
+  const testo = numero(v, Math.abs(v) >= 1000 ? 0 : 2);
+  return valuta === "EUR" ? `${testo} €` : valuta === "USD" ? `${testo} $` : valuta ? `${testo} ${valuta}` : testo;
+}
+function dataLunga(iso) {
+  const d = new Date(`${iso}T12:00:00`);
+  return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+}
+function dataBreve(iso) {
+  const [a, m, g] = iso.split("-");
+  return `${g}/${m}`;
+}
+function oggiIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function testo(s) {
+  const div = document.createElement("div");
+  div.textContent = s == null ? "" : String(s);
+  return div.innerHTML;
+}
+
+/* ------------------------------------------------------------------ GitHub */
+class ErroreGitHub extends Error {
+  constructor(messaggio, codice) { super(messaggio); this.codice = codice; }
+}
+
+async function chiamaGitHub(percorso, opzioni = {}) {
+  if (!stato.token) throw new ErroreGitHub("Collega prima il tuo repository nelle impostazioni.", 0);
+  let risposta;
+  try {
+    risposta = await fetch(API + percorso, {
+      method: opzioni.metodo || "GET",
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${stato.token}`,
+        Accept: opzioni.grezzo ? "application/vnd.github.raw+json" : "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...(opzioni.corpo ? { "Content-Type": "application/json" } : {}),
+      },
+      body: opzioni.corpo ? JSON.stringify(opzioni.corpo) : undefined,
+    });
+  } catch (e) {
+    throw new ErroreGitHub("Nessuna connessione: mostro gli ultimi dati salvati.", -1);
+  }
+  if (risposta.ok) return risposta;
+  if (risposta.status === 401) throw new ErroreGitHub("Il token non è valido o è scaduto: creane uno nuovo.", 401);
+  if (risposta.status === 403 || risposta.status === 429) {
+    if (risposta.headers.get("x-ratelimit-remaining") === "0") {
+      throw new ErroreGitHub("GitHub ha ricevuto troppe richieste: riprova tra qualche minuto.", 429);
+    }
+    throw new ErroreGitHub("Il token non ha il permesso necessario: su GitHub imposta Contents su «Read and write» per report-mercati.", 403);
+  }
+  if (risposta.status === 404) throw new ErroreGitHub("Non trovato", 404);
+  if (risposta.status === 409) throw new ErroreGitHub("Il file è cambiato nel frattempo", 409);
+  throw new ErroreGitHub(`GitHub ha risposto con un errore (${risposta.status}).`, risposta.status);
+}
+
+async function leggiFile(percorso) {
+  const risposta = await chiamaGitHub(`/contents/${percorso}?ref=${CONFIG.ramo}`, { grezzo: true });
+  return risposta.text();
+}
+
+async function shaDi(percorso) {
+  try {
+    const risposta = await chiamaGitHub(`/contents/${percorso}?ref=${CONFIG.ramo}`);
+    return (await risposta.json()).sha;
+  } catch (e) {
+    if (e.codice === 404) return null;
+    throw e;
+  }
+}
+
+function base64(testoUtf8) {
+  const byte = new TextEncoder().encode(testoUtf8);
+  let binario = "";
+  byte.forEach((b) => { binario += String.fromCharCode(b); });
+  return btoa(binario);
+}
+
+async function scriviFile(percorso, contenuto, messaggio) {
+  for (let tentativo = 0; tentativo < 2; tentativo++) {
+    const sha = await shaDi(percorso);
+    try {
+      await chiamaGitHub(`/contents/${percorso}`, {
+        metodo: "PUT",
+        corpo: { message: messaggio, content: base64(contenuto), branch: CONFIG.ramo, ...(sha ? { sha } : {}) },
+      });
+      return;
+    } catch (e) {
+      if (e.codice !== 409 || tentativo === 1) throw e;
+    }
+  }
+}
+
+async function cancellaFile(percorso, messaggio) {
+  const sha = await shaDi(percorso);
+  if (!sha) return;
+  await chiamaGitHub(`/contents/${percorso}`, { metodo: "DELETE", corpo: { message: messaggio, sha, branch: CONFIG.ramo } });
+}
+
+async function verificaToken() {
+  try {
+    await chiamaGitHub("");
+  } catch (e) {
+    if (e.codice === 404) {
+      throw new ErroreGitHub("Il token non vede report-mercati: su GitHub, in «Repository access», scegli «Only select repositories» e poi report-mercati.", 404);
+    }
+    throw e;
+  }
+}
+
+/* ------------------------------------------------------------------ dati */
+async function caricaFeed({ silenzioso = false, attendiDopo = null } = {}) {
+  if (!stato.token || stato.inCorso) return;
+  stato.inCorso = true;
+  $("aggiorna").classList.add("gira");
+  try {
+    for (let tentativo = 0; tentativo < 6; tentativo++) {
+      const feed = JSON.parse(await leggiFile("data/app/feed.json"));
+      stato.feed = feed;
+      stato.offline = false;
+      stato.ultimaLettura = Date.now();
+      memoria.scrivi(CHIAVI.feed, JSON.stringify(feed));
+      // aperta da una notifica: se il dato annunciato non è ancora arrivato, riprova tra poco
+      if (!attendiDopo || !feed.aggiornato || new Date(feed.aggiornato) >= new Date(attendiDopo)) break;
+      await new Promise((ok) => setTimeout(ok, 5000));
+    }
+    disegna();
+  } catch (e) {
+    if (e.codice === -1) stato.offline = true;
+    if (e.codice === 404) {
+      if (!silenzioso) avviso("Il repository non ha ancora i dati per l'app: arrivano con la prossima esecuzione (raccolta alle 7:03).");
+    } else if (!silenzioso || e.codice !== -1) {
+      avviso(e.message);
+    }
+    disegnaSincronia();
+  } finally {
+    stato.inCorso = false;
+    $("aggiorna").classList.remove("gira");
+  }
+}
+
+/* ------------------------------------------------------------------ disegno */
+function disegnaSincronia() {
+  const el = $("sincronia");
+  if (!stato.feed || !stato.feed.aggiornato) { el.textContent = ""; return; }
+  const d = new Date(stato.feed.aggiornato);
+  const ora = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  const stessoGiorno = d.toDateString() === new Date().toDateString();
+  el.textContent = (stato.offline ? "offline, " : "") + (stessoGiorno ? ora : `${d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" })} ${ora}`);
+}
+
+function disegnaNastro() {
+  const nastro = $("nastro");
+  const mercati = (stato.feed && stato.feed.mercati) || {};
+  const voci = Object.entries(mercati);
+  nastro.classList.toggle("nascosto", voci.length === 0);
+  nastro.innerHTML = voci.map(([nome, m]) => {
+    const pb = m.unita === "pb";
+    const valore = pb ? `${numero(m.valore, 1)} pb` : numero(m.valore, decimaliPer(m.valore));
+    const delta = pb ? m.var_pb : m.var_pct;
+    const testoVar = pb ? variazione(delta, 1, " pb") : variazione(delta);
+    return `<div class="mercato"><span class="nome">${testo(nome)}</span>` +
+      `<span class="valore${m.live ? " vivo" : ""}">${valore}</span>` +
+      `<span class="var ${classe(delta)}">${freccia(delta)}${testoVar}</span></div>`;
+  }).join("");
+}
+
+function disegnaIndice(contenitore, sezioni, articolo) {
+  const voci = (sezioni || []).filter((s) => s.id !== "s-sintesi");
+  contenitore.classList.toggle("nascosto", voci.length < 2);
+  contenitore.innerHTML = voci.map((s) => `<button type="button" data-sezione="${testo(s.id)}">${testo(s.titolo)}</button>`).join("");
+  contenitore.onclick = (evento) => {
+    const tasto = evento.target.closest("button[data-sezione]");
+    if (!tasto) return;
+    const bersaglio = articolo.querySelector(`#${CSS.escape(tasto.dataset.sezione)}`);
+    if (bersaglio) bersaglio.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
+}
+
+function firma(voce) {
+  if (!voce) return "";
+  if (voce.fonte === "automatico") {
+    return `<span class="automatico">Versione automatica</span> delle ${testo(voce.pubblicato)}: il report di Claude non è arrivato.`;
+  }
+  return `Scritto da Claude, pubblicato alle ${testo(voce.pubblicato)}.`;
+}
+
+function disegnaOggi() {
+  const g = stato.feed && stato.feed.giornaliero;
+  if (!g) {
+    $("data-oggi").textContent = dataLunga(oggiIso());
+    $("firma-oggi").textContent = "";
+    $("indice-oggi").classList.add("nascosto");
+    $("report-oggi").innerHTML = `<p class="vuoto">Il primo report arriverà domattina: i dati si preparano alle 7:03 e Claude scrive il giornaliero verso le 8.</p>`;
+    return;
+  }
+  $("data-oggi").textContent = dataLunga(g.data);
+  const vecchio = g.data !== oggiIso();
+  $("firma-oggi").innerHTML = firma(g) + (vecchio ? " Il report di oggi non è ancora arrivato." : "");
+  $("report-oggi").innerHTML = g.html || "";
+  disegnaIndice($("indice-oggi"), g.sezioni, $("report-oggi"));
+}
+
+function disegnaOrari() {
+  const o = (stato.feed && stato.feed.orari) || {};
+  const diOggi = o.data === oggiIso();
+  const elenco = diOggi ? (o.elenco || []) : [];
+  let nota;
+  if (diOggi && o.ultimo_controllo) {
+    nota = `Ultimo controllo alle ${o.ultimo_controllo}. Ricevi una notifica solo quando c'è qualcosa di nuovo.`;
+  } else {
+    nota = "Gli aggiornamenti partono alle 10:07 nei giorni di Borsa e arrivano solo quando c'è qualcosa di nuovo.";
+  }
+  $("nota-orari").textContent = nota;
+  $("elenco-orari").innerHTML = elenco.length
+    ? elenco.map((a) => `<article class="orario"><p class="ora">${testo(a.ora)}</p><div class="report">${a.html || ""}</div></article>`).join("")
+    : `<p class="vuoto">${diOggi && o.ultimo_controllo ? "Nessuna novità finora." : "Ancora nessun aggiornamento oggi."}</p>`;
+  const visti = Number(memoria.leggi(CHIAVI.visto + oggiIso()) || 0);
+  const nuovi = Math.max(0, elenco.length - visti);
+  const contatore = $("contatore-orari");
+  contatore.textContent = String(nuovi);
+  contatore.classList.toggle("nascosto", nuovi === 0);
+}
+
+function disegnaIdee() {
+  const idee = (stato.feed && stato.feed.idee) || { aperte: [], chiuse: [] };
+  const aperte = idee.aperte || [];
+  $("nota-idee").textContent = aperte.length
+    ? "Performance dalla segnalazione e rispetto all'indice di riferimento, con i prezzi dell'ultimo aggiornamento."
+    : "";
+  $("elenco-idee").innerHTML = aperte.length ? aperte.map((i) => {
+    const avvisi = [];
+    if (i.invalidazione_toccata) avvisi.push("Invalidazione toccata");
+    if (i.orizzonte_scaduto) avvisi.push("Orizzonte scaduto");
+    if (i.stato === "da_rivedere") avvisi.push("Da rivedere");
+    const giorni = i.giorni_dalla_segnalazione;
+    return `<article class="idea${avvisi.length ? " allarme" : ""}">
+      <header><h3>${testo(i.nome || i.ticker)}</h3><span class="perf ${classe(i.perf_pct)}">${variazione(i.perf_pct)}</span></header>
+      <p class="sigla">${testo(i.ticker)}, ${testo(i.borsa || "")}${i.criterio ? ` — ${testo(i.criterio)}` : ""}</p>
+      <dl>
+        <div><dt>Segnalata il ${dataBreve(i.segnalata_il)} a</dt><dd>${prezzo(i.prezzo_segnalazione, i.valuta)}</dd></div>
+        <div><dt>Ultimo prezzo</dt><dd>${prezzo(i.prezzo_attuale, i.valuta)}</dd></div>
+        <div><dt>Rispetto all'indice</dt><dd class="${classe(i.perf_relativa_pct)}">${variazione(i.perf_relativa_pct)}</dd></div>
+        <div><dt>Invalidazione</dt><dd>${i.invalidazione == null ? "n.d." : prezzo(i.invalidazione, i.valuta)}</dd></div>
+        <div><dt>Orizzonte</dt><dd>${testo(i.orizzonte || "n.d.")}${giorni == null ? "" : giorni === 0 ? ", da oggi" : `, da ${giorni} ${giorni === 1 ? "giorno" : "giorni"}`}</dd></div>
+        <div><dt>Convinzione</dt><dd>${testo(i.convinzione || "n.d.")}</dd></div>
+      </dl>
+      ${avvisi.length ? `<p class="avvisi">${avvisi.map((a) => `<span>${a}</span>`).join("")}</p>` : ""}
+      ${i.ultimo_motivo || i.tesi_iniziale ? `<p class="motivo">${testo(i.ultimo_motivo || i.tesi_iniziale)}</p>` : ""}
+    </article>`;
+  }).join("") : `<p class="vuoto">Nessuna idea aperta. Le segnala Claude nel giornaliero quando un titolo supera i filtri e la sua analisi.</p>`;
+
+  const chiuse = idee.chiuse || [];
+  $("titolo-chiuse").classList.toggle("nascosto", chiuse.length === 0);
+  $("elenco-chiuse").innerHTML = chiuse.map((c) => `<li>
+      <span class="nome">${testo(c.nome || c.ticker)}</span><span class="${classe(c.perf_pct)}">${variazione(c.perf_pct)}</span>
+      <span class="dettaglio">Dal ${dataBreve(c.data_segnalazione)} al ${dataBreve(c.data_chiusura)}${c.motivo_chiusura ? `: ${testo(c.motivo_chiusura)}` : ""}</span>
+    </li>`).join("");
+}
+
+function disegnaArchivio() {
+  const archivio = (stato.feed && stato.feed.archivio) || [];
+  if (!archivio.length) {
+    $("elenco-archivio").innerHTML = `<p class="vuoto">L'archivio si riempie un giorno alla volta.</p>`;
+    return;
+  }
+  const perMese = new Map();
+  archivio.forEach((a) => {
+    const mese = new Date(`${a.data}T12:00:00`).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+    if (!perMese.has(mese)) perMese.set(mese, []);
+    perMese.get(mese).push(a);
+  });
+  $("elenco-archivio").innerHTML = [...perMese.entries()].map(([mese, voci]) => `
+    <h3 class="mese">${testo(mese.charAt(0).toUpperCase() + mese.slice(1))}</h3>
+    <ul class="giorni">${voci.map((a) => {
+      const d = new Date(`${a.data}T12:00:00`);
+      return `<li><a href="#archivio/${a.data}">
+        <span class="giorno"><b>${d.getDate()}</b><span>${d.toLocaleDateString("it-IT", { weekday: "short" })}</span></span>
+        <span><span class="testo">${testo(a.sintesi || a.titolo)}</span>${a.fonte === "automatico" ? `<span class="automatico">Versione automatica</span>` : ""}</span>
+      </a></li>`;
+    }).join("")}</ul>`).join("");
+}
+
+async function apriPassato(data) {
+  const voce = ((stato.feed && stato.feed.archivio) || []).find((a) => a.data === data);
+  $("data-passato").textContent = dataLunga(data);
+  $("firma-passato").innerHTML = voce ? firma(voce) : "";
+  const articolo = $("report-passato");
+  const salvato = memoria.leggi(CHIAVI.archivio + data);
+  if (salvato) {
+    articolo.innerHTML = salvato;
+  } else if (stato.feed && stato.feed.giornaliero && stato.feed.giornaliero.data === data) {
+    articolo.innerHTML = stato.feed.giornaliero.html;
+  } else {
+    articolo.innerHTML = `<p class="vuoto">Carico il report…</p>`;
+    try {
+      const html = await leggiFile(voce ? voce.file : `data/app/giornalieri/${data}.html`);
+      articolo.innerHTML = html;
+      memoria.scrivi(CHIAVI.archivio + data, html);
+    } catch (e) {
+      articolo.innerHTML = `<p class="vuoto">${testo(e.codice === 404 ? "Questo report non è più nell'archivio." : e.message)}</p>`;
+    }
+  }
+  disegnaIndice($("indice-passato"), voce && voce.sezioni, articolo);
+}
+
+function disegnaImpostazioni() {
+  const collegata = Boolean(stato.token);
+  const statoToken = $("stato-token");
+  statoToken.textContent = collegata ? `Collegata a ${CONFIG.repository}` : "Non collegata";
+  statoToken.className = "stato-riga " + (collegata ? "ok" : "");
+  $("scollega").classList.toggle("nascosto", !collegata);
+  $("salva-token").textContent = collegata ? "Sostituisci il token" : "Collega";
+  $("campo-token").value = "";
+  $("campo-token").placeholder = collegata ? "Token salvato su questo dispositivo" : "github_pat_…";
+  aggiornaStatoNotifiche();
+
+  const f = stato.feed || {};
+  const righe = [];
+  if (f.aggiornato) righe.push(["Dati aggiornati", new Date(f.aggiornato).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })]);
+  if (f.stato && f.stato.raccolta) righe.push(["Ultima raccolta", `${f.stato.raccolta.ora}, ${f.stato.raccolta.candidati} titoli dai filtri`]);
+  if (f.mercati_aggiornati) righe.push(["Prezzi del nastro", f.mercati_aggiornati]);
+  if (f.stato && f.stato.dispositivi != null) righe.push(["Dispositivi con notifiche", String(f.stato.dispositivi)]);
+  $("dettagli-dati").innerHTML = righe.map(([a, b]) => `<dt>${testo(a)}</dt><dd>${testo(b)}</dd>`).join("") ||
+    "<dd style='margin:0'>Nessun dato ancora.</dd>";
+}
+
+function passiToken() {
+  return `
+    <li>Apri <a href="${URL_TOKEN}" target="_blank" rel="noopener">la pagina dei token su GitHub</a> (accedi se te lo chiede).</li>
+    <li>In «Repository access» scegli <b>Only select repositories</b> e seleziona <b>${CONFIG.repository}</b>.</li>
+    <li>In «Permissions», alla voce <b>Contents</b>, scegli <b>Read and write</b>. Serve anche a iscrivere il telefono alle notifiche.</li>
+    <li>Scegli la scadenza più lunga, premi <b>Generate token</b> e copia il token (inizia con <code>github_pat_</code>).</li>
+    <li>Incollalo qui sotto e premi Collega.</li>`;
+}
+
+function disegna() {
+  disegnaSincronia();
+  disegnaNastro();
+  disegnaOggi();
+  disegnaOrari();
+  disegnaIdee();
+  disegnaArchivio();
+}
+
+/* ------------------------------------------------------------------ viste */
+const VISTE = ["oggi", "orari", "idee", "archivio", "passato", "impostazioni", "benvenuto"];
+
+function mostra() {
+  let [vista, parametro] = (location.hash.replace(/^#/, "") || "oggi").split("/");
+  if (!VISTE.includes(vista)) vista = "oggi";
+  if (vista === "archivio" && parametro) vista = "passato";
+  if (!stato.token && vista !== "impostazioni") vista = "benvenuto";
+  VISTE.forEach((v) => $(`v-${v}`).classList.toggle("nascosto", v !== vista));
+  const scheda = vista === "passato" ? "archivio" : vista;
+  document.querySelectorAll(".schede a").forEach((a) => {
+    if (a.dataset.vista === scheda) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  $("nastro").classList.toggle("nascosto", ["impostazioni", "benvenuto"].includes(vista) || !(stato.feed && stato.feed.mercati));
+  if (vista === "passato") apriPassato(parametro);
+  if (vista === "impostazioni") disegnaImpostazioni();
+  if (vista === "orari") {
+    const elenco = (stato.feed && stato.feed.orari && stato.feed.orari.data === oggiIso() && stato.feed.orari.elenco) || [];
+    memoria.scrivi(CHIAVI.visto + oggiIso(), String(elenco.length));
+    disegnaOrari();
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ------------------------------------------------------------------ messaggi */
+let timerAvviso;
+function avviso(messaggio, durata = 5000) {
+  const el = $("avviso");
+  el.textContent = messaggio;
+  el.classList.remove("nascosto");
+  clearTimeout(timerAvviso);
+  timerAvviso = setTimeout(() => el.classList.add("nascosto"), durata);
+}
+
+/* ------------------------------------------------------------------ token */
+async function collega(campo, statoEl) {
+  const valore = campo.value.trim();
+  const trovato = valore.match(/(github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]{20,})/);
+  if (!trovato) {
+    mostraStato(statoEl, "Questo non sembra un token di GitHub: deve iniziare con github_pat_.", false);
+    return;
+  }
+  const precedente = stato.token;
+  stato.token = trovato[1];
+  mostraStato(statoEl, "Verifico il token…", null);
+  try {
+    await verificaToken();
+  } catch (e) {
+    stato.token = precedente;
+    mostraStato(statoEl, e.message, false);
+    return;
+  }
+  memoria.scrivi(CHIAVI.token, stato.token);
+  campo.value = "";
+  mostraStato(statoEl, `Collegata a ${CONFIG.repository}.`, true);
+  await caricaFeed();
+  location.hash = "#oggi";
+  mostra();
+}
+
+function mostraStato(el, messaggio, ok) {
+  if (!el) { avviso(messaggio); return; }
+  el.textContent = messaggio;
+  el.className = "stato-riga" + (ok === true ? " ok" : ok === false ? " ko" : "");
+  el.classList.remove("nascosto");
+}
+
+/* ------------------------------------------------------------------ notifiche */
+function installata() {
+  return window.navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+}
+function suIOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+function idDispositivo() {
+  let id = memoria.leggi(CHIAVI.dispositivo);
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^a-z0-9-]/gi, "");
+    memoria.scrivi(CHIAVI.dispositivo, id);
+  }
+  return id;
+}
+function daBase64Url(s) {
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const b = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(b, (c) => c.charCodeAt(0));
+}
+function notificheDisponibili() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+async function iscrizioneAttuale() {
+  if (!notificheDisponibili()) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+async function aggiornaStatoNotifiche() {
+  const el = $("stato-notifiche");
+  const serveInstallare = suIOS() && !installata();
+  $("nota-installa").classList.toggle("nascosto", !serveInstallare);
+  const attiva = $("attiva-notifiche"), prova = $("prova-notifica"), disattiva = $("disattiva-notifiche");
+  if (serveInstallare || !notificheDisponibili()) {
+    el.textContent = serveInstallare ? "Disponibili dopo aver aggiunto l'app alla schermata Home" : "Questo browser non supporta le notifiche push";
+    el.className = "stato-riga";
+    attiva.disabled = true;
+    prova.classList.add("nascosto");
+    disattiva.classList.add("nascosto");
+    return;
+  }
+  attiva.disabled = !stato.token;
+  let iscrizione = null;
+  try { iscrizione = await iscrizioneAttuale(); } catch (e) { /* niente */ }
+  const accese = Boolean(iscrizione) && Notification.permission === "granted";
+  if (Notification.permission === "denied") {
+    el.textContent = "Bloccate: riattivale da Impostazioni dell'iPhone → Notifiche → Mercati";
+    el.className = "stato-riga ko";
+  } else {
+    el.textContent = accese ? "Attive su questo dispositivo" : "Spente";
+    el.className = "stato-riga" + (accese ? " ok" : "");
+  }
+  attiva.textContent = accese ? "Riattiva le notifiche" : "Attiva le notifiche";
+  prova.classList.toggle("nascosto", !accese);
+  disattiva.classList.toggle("nascosto", !accese);
+}
+
+async function attivaNotifiche() {
+  const tasto = $("attiva-notifiche");
+  tasto.disabled = true;
+  try {
+    const permesso = await Notification.requestPermission();
+    if (permesso !== "granted") {
+      avviso("Notifiche non consentite. Puoi abilitarle da Impostazioni dell'iPhone → Notifiche → Mercati.");
+      return;
+    }
+    const chiave = (await leggiFile("data/app/vapid_pubblica.txt")).trim();
+    const reg = await navigator.serviceWorker.ready;
+    let iscrizione = await reg.pushManager.getSubscription();
+    if (iscrizione && memoria.leggi(CHIAVI.vapid) !== chiave) {
+      await iscrizione.unsubscribe();
+      iscrizione = null;
+    }
+    if (!iscrizione) {
+      iscrizione = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: daBase64Url(chiave) });
+    }
+    const dati = { ...iscrizione.toJSON(), dispositivo: suIOS() ? "iPhone" : navigator.platform || "browser", creata: new Date().toISOString() };
+    await scriviFile(`data/app/iscrizioni/${idDispositivo()}.json`, JSON.stringify(dati, null, 2) + "\n",
+      "app: iscrizione del dispositivo alle notifiche");
+    memoria.scrivi(CHIAVI.vapid, chiave);
+    avviso("Notifiche attive. Puoi provarle con «Invia una notifica di prova».");
+  } catch (e) {
+    avviso(e.codice === 404 ? "Le chiavi delle notifiche non sono ancora nel repository: riprova dopo la prossima esecuzione." :
+      (e.message || "Non sono riuscito ad attivare le notifiche."));
+  } finally {
+    tasto.disabled = false;
+    aggiornaStatoNotifiche();
+  }
+}
+
+async function disattivaNotifiche() {
+  try {
+    const iscrizione = await iscrizioneAttuale();
+    if (iscrizione) await iscrizione.unsubscribe();
+    await cancellaFile(`data/app/iscrizioni/${idDispositivo()}.json`, "app: dispositivo tolto dalle notifiche");
+    avviso("Notifiche disattivate su questo dispositivo.");
+  } catch (e) {
+    avviso(e.message);
+  } finally {
+    aggiornaStatoNotifiche();
+  }
+}
+
+async function comando(modalita, conferma) {
+  try {
+    await scriviFile("comandi/esegui.txt", `${modalita}\n# richiesto dall'app il ${new Date().toISOString()}\n`, `esegui: ${modalita} (dall'app)`);
+    avviso(conferma, 7000);
+    return true;
+  } catch (e) {
+    avviso(e.message);
+    return false;
+  }
+}
+
+async function chiediAggiornamento() {
+  const prima = stato.feed && stato.feed.aggiornato;
+  if (!(await comando("oraria", "Richiesta inviata: i dati si aggiornano in 2-3 minuti."))) return;
+  for (let i = 0; i < 10; i++) {  // controllo per 5 minuti se il feed è cambiato
+    await new Promise((ok) => setTimeout(ok, 30000));
+    await caricaFeed({ silenzioso: true });
+    if (stato.feed && stato.feed.aggiornato !== prima) { avviso("Dati aggiornati."); return; }
+  }
+}
+
+/* ------------------------------------------------------------------ avvio */
+function avvia() {
+  $("passi-token").innerHTML = passiToken();
+  $("passi-benvenuto").innerHTML = passiToken();
+  $("salva-token").onclick = () => collega($("campo-token"), $("stato-token"));
+  $("salva-token-benvenuto").onclick = () => collega($("campo-token-benvenuto"), $("stato-benvenuto"));
+  $("scollega").onclick = () => {
+    if (!confirm("Scollegare l'app? Il token verrà tolto da questo dispositivo.")) return;
+    memoria.togli(CHIAVI.token);
+    stato.token = null;
+    location.hash = "#benvenuto";
+    mostra();
+  };
+  $("attiva-notifiche").onclick = attivaNotifiche;
+  $("disattiva-notifiche").onclick = disattivaNotifiche;
+  $("prova-notifica").onclick = () => comando("notifica", "Notifica di prova richiesta: arriva tra 1-2 minuti.");
+  $("chiedi-aggiornamento").onclick = chiediAggiornamento;
+  $("aggiorna").onclick = () => caricaFeed();
+  $("torna-archivio").onclick = () => { location.hash = "#archivio"; };
+  window.addEventListener("hashchange", mostra);
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => { /* senza service worker l'app funziona lo stesso, solo online */ });
+    navigator.serviceWorker.addEventListener("message", (evento) => {
+      const m = evento.data || {};
+      if (m.tipo === "push") caricaFeed({ silenzioso: true, attendiDopo: m.ts });
+      if (m.tipo === "apri") {
+        const url = new URL(m.url);
+        location.hash = url.hash || "#oggi";
+        caricaFeed({ silenzioso: true, attendiDopo: m.ts });
+      }
+    });
+  }
+  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+    if (Date.now() - stato.ultimaLettura > 60000) caricaFeed({ silenzioso: true });
+  });
+
+  disegna();
+  mostra();
+  const ts = new URLSearchParams(location.search).get("ts");  // aperta da una notifica
+  if (ts) history.replaceState(null, "", location.pathname + location.hash);
+  if (stato.token) caricaFeed({ silenzioso: true, attendiDopo: ts });
+}
+
+avvia();
+</script>
+</body>
+</html>
