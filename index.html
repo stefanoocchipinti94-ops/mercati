@@ -802,6 +802,30 @@ function disegnaImpostazioni() {
   if (f.stato && f.stato.dispositivi != null) righe.push(["Dispositivi con notifiche", String(f.stato.dispositivi)]);
   $("dettagli-dati").innerHTML = righe.map(([a, b]) => `<dt>${testo(a)}</dt><dd>${testo(b)}</dd>`).join("") ||
     "<dd style='margin:0'>Nessun dato ancora.</dd>";
+  mostraUltimoInvio();
+}
+
+async function mostraUltimoInvio() {
+  if (!stato.token) return;
+  let esito;
+  try {
+    esito = JSON.parse(await leggiFile("data/app/ultimo_invio.json"));
+  } catch (e) {
+    return;  // nessuna notifica ancora inviata, o offline
+  }
+  const quando = new Date(esito.quando).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" });
+  const titolo = (esito.notifiche || [])[0] || "notifica";
+  let risultato;
+  if (!esito.dispositivi) risultato = "nessun dispositivo iscritto";
+  else if (esito.inviate && !esito.errori) risultato = `consegnata al servizio push (${esito.inviate})`;
+  else {
+    const primo = (esito.risposte || []).find((r) => !r.stato || r.stato >= 300) || {};
+    risultato = `non consegnata: ${primo.stato || "errore di rete"}${primo.motivo ? ` ${primo.motivo}` : ""}`;
+  }
+  const dl = $("dettagli-dati");
+  if (dl.querySelector("[data-ultimo-invio]")) return;
+  dl.insertAdjacentHTML("beforeend",
+    `<dt data-ultimo-invio>Ultima notifica</dt><dd>${testo(`${quando}, «${titolo}»: ${risultato}`)}</dd>`);
 }
 
 function passiToken() {
