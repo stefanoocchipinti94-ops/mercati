@@ -243,6 +243,33 @@
 
   .vuoto { font-family: var(--serif); font-size: 18px; color: var(--grafite); padding: 28px 0; }
 
+  /* ---------------- radar e chiedi a Claude */
+  .gruppo-radar { margin: 0 0 22px; }
+  .gruppo-radar > h3 { font-family: var(--serif); font-weight: 600; font-size: 21px; margin: 18px 0 4px; }
+  .gruppo-radar > .nota { margin-bottom: 10px; }
+  .segnale { background: var(--foglio); border: 1px solid var(--riga); border-left: 4px solid var(--verde); border-radius: 4px; padding: 12px 14px; margin: 0 0 10px; }
+  .segnale.ribasso { border-left-color: var(--rosso); }
+  .segnale header { display: flex; align-items: baseline; gap: 10px; }
+  .segnale h4 { margin: 0; font-size: 16.5px; font-weight: 650; flex: 1; }
+  .segnale .perf { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .segnale .sigla { margin: 2px 0 6px; color: var(--grafite); font-size: 13px; }
+  .segnale p { margin: 4px 0 0; font-size: 14.5px; }
+  .segnale .smentita { color: var(--grafite); font-size: 13.5px; }
+  .etichette { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0; }
+  .etichette span { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--verde-tenue); color: var(--verde); font-weight: 600; }
+  .etichette span.allarme { background: var(--rosso-tenue); color: var(--rosso); }
+  .chiedi { margin-top: 8px; border: 1px solid var(--verde); background: transparent; color: var(--verde); border-radius: 14px; padding: 4px 11px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .chiedi svg { width: 15px; height: 15px; }
+  .tabella-radar { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .tabella-radar th { text-align: left; font-weight: 600; color: var(--grafite); font-size: 12px; padding: 6px 6px 6px 0; border-bottom: 1px solid var(--riga); }
+  .tabella-radar td { padding: 8px 6px 8px 0; border-bottom: 1px solid var(--riga); vertical-align: top; }
+  .tabella-radar td.num { text-align: right; white-space: nowrap; }
+  .tabella-radar .piccolo { display: block; color: var(--grafite); font-size: 12px; }
+  dialog.chiedi-finestra { width: min(560px, calc(100vw - 24px)); border: 1px solid var(--riga); border-radius: 10px; background: var(--foglio); color: var(--inchiostro); padding: 16px; }
+  dialog.chiedi-finestra::backdrop { background: rgba(0, 0, 0, 0.45); }
+  dialog.chiedi-finestra h3 { margin: 0 0 6px; font-family: var(--serif); font-size: 22px; font-weight: 600; }
+  dialog.chiedi-finestra textarea { width: 100%; min-height: 150px; padding: 10px 12px; border: 1px solid var(--riga); border-radius: 6px; background: var(--carta); color: var(--inchiostro); font: 16px/1.4 var(--sans); resize: vertical; }
+
   /* ---------------- portafoglio */
   .port-totale { background: var(--foglio); border: 1px solid var(--riga); border-radius: 4px; padding: 14px; margin: 0 0 16px; display: grid; gap: 4px; }
   .port-totale .etichetta { font-size: 12.5px; color: var(--grafite); }
@@ -266,13 +293,13 @@
   /* ---------------- schede in basso */
   .schede {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-template-columns: repeat(6, 1fr);
     height: calc(var(--schede) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
     background: var(--carta); border-top: 1px solid var(--riga);
   }
   .schede a {
     position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    color: var(--grafite); text-decoration: none; font-size: 12px; font-weight: 500;
+    color: var(--grafite); text-decoration: none; font-size: 11px; font-weight: 500;
   }
   .schede a svg { width: 24px; height: 24px; }
   .schede a[aria-current="page"] { color: var(--verde); font-weight: 650; }
@@ -302,6 +329,9 @@
 <header class="barra">
   <h1 class="marchio">Mercati</h1>
   <span class="sincronia" id="sincronia" aria-live="polite"></span>
+  <button class="tasto-icona" id="apri-chiedi" type="button" aria-label="Chiedi a Claude">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.14L4 20.5l1.36-4.9A8 8 0 1 1 21 12z"/><path d="M9 10h6M9 13.5h4"/></svg>
+  </button>
   <button class="tasto-icona" id="aggiorna" type="button" aria-label="Aggiorna i dati">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
   </button>
@@ -329,6 +359,12 @@
     <p class="nota" id="nota-portafoglio"></p>
     <div id="testa-portafoglio"></div>
     <div id="elenco-portafoglio"></div>
+  </section>
+
+  <section class="vista nascosto" id="v-radar" aria-labelledby="titolo-radar">
+    <h2 class="titolo-vista" id="titolo-radar">Radar</h2>
+    <p class="nota" id="nota-radar"></p>
+    <div id="contenuto-radar"></div>
   </section>
 
   <section class="vista nascosto" id="v-orari" aria-labelledby="titolo-orari">
@@ -422,12 +458,26 @@
   </section>
 </main>
 
+<dialog class="chiedi-finestra" id="finestra-chiedi" aria-labelledby="titolo-chiedi">
+  <h3 id="titolo-chiedi">Chiedi a Claude</h3>
+  <p class="nota">Si apre Claude con la domanda già scritta e i tuoi dati (portafoglio, radar, report) nel repository. Controlla e invia.</p>
+  <label for="testo-chiedi" class="nascosto">Domanda</label>
+  <textarea id="testo-chiedi"></textarea>
+  <div class="azioni">
+    <button class="tasto" type="button" id="invia-chiedi">Apri in Claude</button>
+    <button class="tasto secondario" type="button" id="chiudi-chiedi">Annulla</button>
+  </div>
+</dialog>
+
 <nav class="schede" aria-label="Sezioni">
   <a href="#oggi" data-vista="oggi">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Oggi
   </a>
   <a href="#portafoglio" data-vista="portafoglio">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Portafoglio
+  </a>
+  <a href="#radar" data-vista="radar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l5.5-5.5"/></svg>Radar
   </a>
   <a href="#orari" data-vista="orari">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Orari<span class="contatore nascosto" id="contatore-orari"></span>
@@ -756,6 +806,7 @@ function disegnaIdee() {
       </dl>
       ${avvisi.length ? `<p class="avvisi">${avvisi.map((a) => `<span>${a}</span>`).join("")}</p>` : ""}
       ${i.ultimo_motivo || i.tesi_iniziale ? `<p class="motivo">${testo(i.ultimo_motivo || i.tesi_iniziale)}</p>` : ""}
+      ${tastoChiedi(`Idea aperta su ${i.nome || i.ticker} (${i.ticker}), segnalata il ${dataBreve(i.segnalata_il)} a ${prezzo(i.prezzo_segnalazione, i.valuta)}, ora ${prezzo(i.prezzo_attuale, i.valuta)} (${variazione(i.perf_pct)}). La tesi regge ancora? Cosa è cambiato dalla segnalazione?`)}
     </article>`;
   }).join("") : `<p class="vuoto">Nessuna idea aperta. Le segnala Claude nel giornaliero quando un titolo supera i filtri e la sua analisi.</p>`;
 
@@ -787,6 +838,7 @@ function disegnaPortafoglio() {
       <strong>${euro(p.valore_stimato_eur, 2)}</strong>
       <span class="giorno ${classe(p.var_1g_eur)}">${freccia(p.var_1g_eur)}${variazione(p.var_1g_eur, 2, " €")} (${variazione(p.var_1g_pct)}) oggi</span>
       <span class="etichetta">PAC mensili: ${euro(p.pac_mensile_totale_eur)}</span>
+      <div>${tastoChiedi("Fammi un check del mio portafoglio: com'è andato oggi, concentrazione per titolo e per tema, eventi in arrivo sulle mie posizioni e cosa terresti d'occhio questa settimana.")}</div>
     </div>`;
   const ordinate = posizioni.slice().sort((a, b) => (b.controvalore_eur || 0) - (a.controvalore_eur || 0));
   $("elenco-portafoglio").innerHTML = ordinate.map((r) => {
@@ -811,8 +863,123 @@ function disegnaPortafoglio() {
       </dl>
       ${notizie ? `<ul class="notizie">${notizie}</ul>` : ""}
       ${r.nota ? `<p class="motivo">${testo(r.nota)}</p>` : ""}
+      ${tastoChiedi(`${r.nome} (${r.ticker}), nel mio portafoglio: ${prezzo(r.prezzo, r.valuta)}, ${variazione(r.var_1g_pct)} oggi, peso ${r.peso_pct == null ? "n.d." : numero(r.peso_pct, 1) + "%"}${r.pac_mensile_eur ? `, PAC di ${euro(r.pac_mensile_eur)} al mese` : ""}. Cosa sta muovendo il titolo, quali eventi arrivano e che rischi vedi per la mia posizione?`)}
     </article>`;
   }).join("");
+}
+
+/* ------------------------------------------------------------------ chiedi a Claude */
+const ICONA_CHIEDI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.14L4 20.5l1.36-4.9A8 8 0 1 1 21 12z"/><path d="M9 10h6M9 13.5h4"/></svg>`;
+const DOMANDE = {};
+let contaDomande = 0;
+function tastoChiedi(domanda, etichetta = "Chiedi a Claude") {
+  const id = `d${++contaDomande}`;
+  DOMANDE[id] = domanda;
+  return `<button class="chiedi" type="button" data-domanda="${id}">${ICONA_CHIEDI}${testo(etichetta)}</button>`;
+}
+function promptClaude(domanda) {
+  return "Sono Stefano. Nel repository " + CONFIG.repository + " trovi i miei dati aggiornati: data/app/feed.json " +
+    "(portafoglio, radar con IPO e momentum, idee aperte, mercati), data/ultimo_giornaliero.md (ultimo report) e la cartella reports/ " +
+    "(aggiornamenti). Leggili prima di rispondere e usa la ricerca web per notizie e prezzi più recenti, citando fonte e orario. " +
+    "Rispondi in italiano da analista: numeri, fatti separati dalle tue valutazioni, rischi principali e il livello che smentirebbe la tesi. " +
+    "Non modificare file nel repository.\n\nDomanda: " + domanda;
+}
+function apriChiedi(domanda = "") {
+  $("testo-chiedi").value = domanda;
+  const finestra = $("finestra-chiedi");
+  if (finestra.showModal) finestra.showModal(); else finestra.setAttribute("open", "");
+  setTimeout(() => $("testo-chiedi").focus(), 50);
+}
+function inviaChiedi() {
+  const domanda = $("testo-chiedi").value.trim();
+  if (!domanda) { avviso("Scrivi prima la domanda."); return; }
+  const url = "https://claude.ai/code/new?q=" + encodeURIComponent(promptClaude(domanda)) +
+    "&repo=" + encodeURIComponent(`${CONFIG.proprietario}/${CONFIG.repository}`);
+  $("finestra-chiedi").close();
+  window.open(url, "_blank", "noopener");
+}
+document.addEventListener("click", (evento) => {
+  const tasto = evento.target.closest("[data-domanda]");
+  if (tasto) apriChiedi(DOMANDE[tasto.dataset.domanda] || "");
+});
+
+/* ------------------------------------------------------------------ radar */
+function milioni(v) {
+  if (v === null || v === undefined) return "n.d.";
+  return v >= 1e9 ? `${numero(v / 1e9, 1)} mld $` : `${numero(v / 1e6, 0)} mln $`;
+}
+function disegnaRadar() {
+  const r = stato.feed && stato.feed.radar;
+  if (!r) {
+    $("nota-radar").textContent = "";
+    $("contenuto-radar").innerHTML = `<p class="vuoto">Il radar comparirà con il prossimo aggiornamento dei dati.</p>`;
+    return;
+  }
+  $("nota-radar").textContent = `Aggiornato alle ${r.aggiornato}. Segnali e dati, non indicazioni operative: per ognuno trovi il livello che lo smentirebbe.`;
+  const parti = [];
+
+  const mom = r.momentum || [];
+  parti.push(`<section class="gruppo-radar"><h3>Momentum e segnali</h3>
+    <p class="nota">Titoli che hanno superato i filtri dell'ultima esecuzione.</p>
+    ${mom.length ? mom.map((m) => {
+      const etichette = (m.criteri || []).map((c) => `<span>${testo(c)}</span>`)
+        .concat(m.in_portafoglio ? ['<span class="allarme">In portafoglio</span>'] : [])
+        .concat(m.gia_in_idee ? ["<span>Già tra le idee</span>"] : []);
+      const domanda = `${m.nome} (${m.ticker}): ${variazione(m.var_pct)} a ${numero(m.prezzo, 2)}, segnale ${m.direzione} (${(m.motivi || []).join(", ") || (m.criteri || []).join(", ")}). ` +
+        "Il segnale è solido o è rumore? Cosa lo ha mosso, come si confronta con il settore e quale sarebbe un livello di ingresso e di uscita ragionevole?";
+      return `<article class="segnale ${m.direzione === "ribasso" ? "ribasso" : ""}">
+        <header><h4>${testo(m.nome || m.ticker)}</h4><span class="perf ${classe(m.var_pct)}">${variazione(m.var_pct)}</span></header>
+        <p class="sigla">${testo(m.ticker)}${m.borsa ? ` · ${testo(m.borsa)}` : ""} · ${m.direzione === "rialzo" ? "▲ rialzo" : "▼ ribasso"}${m.motivi && m.motivi.length ? ` · ${testo(m.motivi.join(", "))}` : ""}</p>
+        ${m.notizia ? `<p>${testo(m.notizia.titolo)} <span class="smentita">${testo(m.notizia.fonte || "")}${m.notizia.ora ? `, ${testo(m.notizia.ora)}` : ""}</span></p>` : ""}
+        ${m.smentita != null ? `<p class="smentita">Smentita ${testo(m.smentita_spiegazione)}: ${numero(m.smentita, 2)}</p>` : ""}
+        <div class="etichette">${etichette.join("")}</div>
+        ${tastoChiedi(domanda)}
+      </article>`;
+    }).join("") : `<p class="vuoto">Nessun segnale nell'ultima esecuzione.</p>`}
+  </section>`);
+
+  const lock = r.lockup_in_arrivo || [];
+  if (lock.length) {
+    parti.push(`<section class="gruppo-radar"><h3>Lock-up in scadenza</h3>
+      <p class="nota">Dopo il lock-up (stimato a 180 giorni) i primi azionisti possono vendere: spesso arriva pressione sul titolo.</p>
+      ${lock.map((x) => `<article class="segnale ribasso"><header><h4>${testo(x.nome)}</h4><span class="perf">${x.giorni_al_lockup} gg</span></header>
+        <p class="sigla">${testo(x.ticker)} · fine lock-up stimata ${dataBreve(x.fine_lockup_stimata)} · ${variazione(x.var_da_ipo_pct)} dall'IPO</p>
+        ${tastoChiedi(`${x.nome} (${x.ticker}): il lock-up scade intorno al ${dataBreve(x.fine_lockup_stimata)}. Quante azioni si sbloccano, chi le detiene e cosa è successo al prezzo in casi simili?`)}</article>`).join("")}
+    </section>`);
+  }
+
+  const prossime = r.ipo_prossime || [];
+  parti.push(`<section class="gruppo-radar"><h3>IPO in arrivo</h3>
+    <p class="nota">Calendario delle quotazioni USA.</p>
+    ${prossime.length ? `<table class="tabella-radar"><thead><tr><th>Società</th><th>Data</th><th class="num">Prezzo</th><th class="num">Raccolta</th></tr></thead><tbody>
+      ${prossime.map((x) => `<tr><td>${testo(x.nome)}<span class="piccolo">${testo(x.ticker)}${x.borsa ? ` · ${testo(x.borsa)}` : ""}</span>
+        ${tastoChiedi(`IPO di ${x.nome} (${x.ticker}) attesa ${x.data_attesa ? "il " + dataBreve(x.data_attesa) : "a breve"}, forchetta ${x.forchetta || "n.d."} $. Com'è il business, la valutazione rispetto ai comparabili e cosa aspettarsi dal debutto?`, "Chiedi")}</td>
+        <td>${x.data_attesa ? dataBreve(x.data_attesa) : "n.d."}</td><td class="num">${testo((x.forchetta || "n.d.").replace(/\./g, ","))}</td><td class="num">${milioni(x.raccolta_usd)}</td></tr>`).join("")}
+    </tbody></table>` : `<p class="vuoto">Nessuna IPO in calendario.</p>`}
+  </section>`);
+
+  const recenti = r.ipo_recenti || [];
+  parti.push(`<section class="gruppo-radar"><h3>IPO recenti</h3>
+    <p class="nota">Andamento rispetto al prezzo di collocamento.</p>
+    ${recenti.length ? `<table class="tabella-radar"><thead><tr><th>Società</th><th class="num">IPO</th><th class="num">Oggi</th><th class="num">Da IPO</th></tr></thead><tbody>
+      ${recenti.map((x) => `<tr><td>${testo(x.nome)}<span class="piccolo">${testo(x.ticker)} · ${dataBreve(x.data_ipo)} · lock-up ${x.giorni_al_lockup >= 0 ? "tra " + x.giorni_al_lockup + " gg" : "scaduto"}${x.in_portafoglio ? " · in portafoglio" : ""}</span>
+        ${tastoChiedi(`${x.nome} (${x.ticker}): quotata il ${dataBreve(x.data_ipo)} a ${numero(x.prezzo_ipo, 2)} $, ora ${numero(x.prezzo, 2)} $ (${variazione(x.var_da_ipo_pct)} dall'IPO). Cosa sta prezzando il mercato e quali sono i prossimi catalizzatori (trimestrale, copertura degli analisti, lock-up)?`, "Chiedi")}</td>
+        <td class="num">${numero(x.prezzo_ipo, 2)}</td><td class="num">${x.prezzo == null ? "n.d." : numero(x.prezzo, 2)}<span class="piccolo ${classe(x.var_1g_pct)}">${variazione(x.var_1g_pct)}</span></td>
+        <td class="num ${classe(x.var_da_ipo_pct)}">${variazione(x.var_da_ipo_pct)}</td></tr>`).join("")}
+    </tbody></table>` : `<p class="vuoto">Nessuna IPO recente sopra i 100 milioni di dollari.</p>`}
+  </section>`);
+
+  const trim = r.trimestrali || [];
+  if (trim.length) {
+    parti.push(`<section class="gruppo-radar"><h3>Trimestrali della settimana</h3>
+      <table class="tabella-radar"><thead><tr><th>Società</th><th>Data</th><th class="num">EPS atteso</th></tr></thead><tbody>
+      ${trim.map((t) => `<tr><td>${testo(t.nome || t.ticker)}<span class="piccolo">${testo(t.ticker)}${t.in_portafoglio ? " · in portafoglio" : ""}</span></td>
+        <td>${dataBreve(t.data)}${t.momento ? `<span class="piccolo">${t.momento === "BMO" ? "prima dell'apertura" : t.momento === "AMC" ? "dopo la chiusura" : testo(t.momento)}</span>` : ""}</td>
+        <td class="num">${t.eps_stimato == null ? "n.d." : numero(t.eps_stimato, 2)}</td></tr>`).join("")}
+      </tbody></table></section>`);
+  }
+  parti.push(`<p class="nota">${testo(r.fonti || "")}</p>`);
+  $("contenuto-radar").innerHTML = parti.join("");
 }
 
 function disegnaArchivio() {
@@ -922,11 +1089,12 @@ function disegna() {
   disegnaOrari();
   disegnaIdee();
   disegnaPortafoglio();
+  disegnaRadar();
   disegnaArchivio();
 }
 
 /* ------------------------------------------------------------------ viste */
-const VISTE = ["oggi", "portafoglio", "orari", "idee", "archivio", "passato", "impostazioni", "benvenuto"];
+const VISTE = ["oggi", "portafoglio", "radar", "orari", "idee", "archivio", "passato", "impostazioni", "benvenuto"];
 
 function mostra() {
   let [vista, parametro] = (location.hash.replace(/^#/, "") || "oggi").split("/");
@@ -1136,6 +1304,9 @@ function avvia() {
   $("prova-notifica").onclick = () => comando("notifica", "Notifica di prova richiesta: arriva tra 1-2 minuti.");
   $("chiedi-aggiornamento").onclick = chiediAggiornamento;
   $("aggiorna").onclick = () => caricaFeed();
+  $("apri-chiedi").onclick = () => apriChiedi("");
+  $("invia-chiedi").onclick = inviaChiedi;
+  $("chiudi-chiedi").onclick = () => $("finestra-chiedi").close();
   $("torna-archivio").onclick = () => { location.hash = "#archivio"; };
   window.addEventListener("hashchange", mostra);
 
