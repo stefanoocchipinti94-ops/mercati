@@ -1,6 +1,6 @@
 /* Service worker dell'app Mercati: funzionamento offline e notifiche push. */
 
-const VERSIONE = "mercati-1.0.0";
+const VERSIONE = "mercati-1.1.0";
 const GUSCIO = [
   "./",
   "./index.html",
